@@ -1,0 +1,41 @@
+# 依赖和构建产物
+node_modules
+.pnpm-store
+.next
+dist
+.turbo
+
+# 版本控制
+.git
+.gitignore
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# 文档和配置
+*.md
+LICENSE
+.prettierrc
+.prettierignore
+.eslintrc*
+
+# Docker（不需要复制到构建上下文）
+docker
+docker-compose*.yml
+Makefile
+
+# 运行时目录
+uploads
+tmp
+
+# 系统文件
+.DS_Store
+Thumbs.db

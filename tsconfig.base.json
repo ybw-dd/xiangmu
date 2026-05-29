@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@lingxun/types": ["packages/types/src"],
+      "@lingxun/utils": ["packages/utils/src"],
+      "@lingxun/socket": ["packages/socket/src"],
+      "@lingxun/ui": ["packages/ui/src"]
+    }
+  },
+  "exclude": ["node_modules", "dist", ".next"]
+}

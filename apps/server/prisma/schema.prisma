@@ -1,0 +1,235 @@
+// ==========================================
+// 灵讯（LingXun）数据库模型定义
+// ==========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// 用户表
+// ==========================================
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique @db.VarChar(50)
+  email     String   @unique @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  nickname  String   @db.VarChar(50)
+  avatar    String?  @db.VarChar(500)
+  status    String   @default("offline") @db.VarChar(20)
+  lastSeenAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联
+  sentMessages     Message[]
+  attachments      Attachment[]
+  notifications    Notification[]
+
+  // 会话参与
+  conversationParticipants ConversationParticipant[]
+
+  // 好友关系
+  friendshipsSent  Friend[] @relation("UserFriends")
+  friendshipsReceived Friend[] @relation("FriendOf")
+
+  // 群组
+  ownedGroups      Group[]
+  groupMemberships GroupMember[]
+
+  @@map("users")
+  @@index([username])
+  @@index([email])
+  @@index([status])
+}
+
+// ==========================================
+// 好友关系表
+// ==========================================
+model Friend {
+  id        String   @id @default(cuid())
+  userId    String   @db.VarChar(30)
+  friendId  String   @db.VarChar(30)
+  remark    String?  @db.VarChar(50)
+  status    String   @default("pending") @db.VarChar(20) // pending/accepted/rejected/blocked
+  createdAt DateTime @default(now())
+
+  // 关联
+  user   User @relation("UserFriends", fields: [userId], references: [id])
+  friend User @relation("FriendOf", fields: [friendId], references: [id])
+
+  @@map("friends")
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
+  @@index([status])
+}
+
+// ==========================================
+// 会话表（支持单聊和群聊）
+// ==========================================
+model Conversation {
+  id            String   @id @default(cuid())
+  type          String   @db.VarChar(20) // private/group
+  name          String?  @db.VarChar(100)
+  avatar        String?  @db.VarChar(500)
+  lastMessageId String?  @db.VarChar(30)
+  lastMessageAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 关联
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  // 群组关联（如果是群聊）
+  group Group?
+
+  @@map("conversations")
+  @@index([type])
+  @@index([lastMessageAt(sort: Desc)])
+}
+
+// ==========================================
+// 会话参与者表
+// ==========================================
+model ConversationParticipant {
+  id             String   @id @default(cuid())
+  conversationId String   @db.VarChar(30)
+  userId         String   @db.VarChar(30)
+  lastReadSeq    Int      @default(0)
+  joinedAt       DateTime @default(now())
+
+  // 关联
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@map("conversation_participants")
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
+}
+
+// ==========================================
+// 消息表
+// ==========================================
+model Message {
+  id             String   @id @default(cuid())
+  clientId       String   @unique @db.VarChar(100) // 客户端生成的唯一ID，用于幂等
+  conversationId String   @db.VarChar(30)
+  senderId       String   @db.VarChar(30)
+  type           String   @db.VarChar(20) // text/image/file/audio/video/system
+  content        String   @db.Text
+  metadata       String?  @db.Text // JSON 字符串
+  seq            Int      // 消息序列号，保证顺序
+  status         String   @default("sent") @db.VarChar(20) // sending/sent/delivered/read/failed
+  replyToId      String?  @db.VarChar(30)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // 关联
+  sender       User         @relation(fields: [senderId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  replyTo      Message?     @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies      Message[]    @relation("MessageReplies")
+
+  @@map("messages")
+  @@index([conversationId, seq(sort: Desc)])
+  @@index([conversationId, createdAt(sort: Desc)])
+  @@index([senderId])
+  @@index([status])
+}
+
+// ==========================================
+// 群组表
+// ==========================================
+model Group {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(100)
+  avatar      String?  @db.VarChar(500)
+  description String?  @db.Text
+  ownerId     String   @db.VarChar(30)
+  maxMembers  Int      @default(500)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联 - 关联到会话
+  conversationId String       @unique @db.VarChar(30)
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  owner          User         @relation(fields: [ownerId], references: [id])
+  members        GroupMember[]
+
+  @@map("groups")
+  @@index([ownerId])
+}
+
+// ==========================================
+// 群组成员表
+// ==========================================
+model GroupMember {
+  id        String   @id @default(cuid())
+  groupId   String   @db.VarChar(30)
+  userId    String   @db.VarChar(30)
+  role      String   @default("member") @db.VarChar(20) // owner/admin/member
+  nickname  String?  @db.VarChar(50) // 群内昵称
+  joinedAt  DateTime @default(now())
+
+  // 关联
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@map("group_members")
+  @@unique([groupId, userId])
+  @@index([userId])
+  @@index([groupId, role])
+}
+
+// ==========================================
+// 附件表
+// ==========================================
+model Attachment {
+  id         String   @id @default(cuid())
+  url        String   @db.VarChar(1000)
+  filename   String   @db.VarChar(255)
+  mimetype   String   @db.VarChar(100)
+  size       Int
+  width      Int?
+  height     Int?
+  duration   Int?     // 音视频时长（秒）
+  uploaderId String   @db.VarChar(30)
+  createdAt  DateTime @default(now())
+
+  // 关联
+  uploader User @relation(fields: [uploaderId], references: [id])
+
+  @@map("attachments")
+  @@index([uploaderId])
+  @@index([mimetype])
+}
+
+// ==========================================
+// 通知表
+// ==========================================
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   @db.VarChar(30)
+  type      String   @db.VarChar(50) // friend_request/friend_accepted/group_invite/system
+  title     String   @db.VarChar(200)
+  content   String   @db.Text
+  data      String?  @db.Text // JSON 字符串
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // 关联
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+  @@index([userId, isRead])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([type])
+}

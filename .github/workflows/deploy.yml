@@ -1,0 +1,47 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 代码
+        uses: actions/checkout@v4
+
+      - name: SSH 部署到生产服务器
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/lingxun || git clone git@github.com:${{ github.repository }}.git /opt/lingxun && cd /opt/lingxun
+            git fetch origin main
+            git reset --hard origin/main
+            docker compose down
+            docker compose up -d --build
+
+      - name: 等待服务启动
+        run: sleep 30
+
+      - name: 健康检查
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "=== Docker 容器状态 ==="
+            docker compose -f /opt/lingxun/docker-compose.yml ps
+            echo ""
+            echo "=== 健康检查 ==="
+            curl -s -o /dev/null -w "HTTP Status: %{http_code}" http://localhost:80/ || echo "Nginx 未就绪"
+            echo ""
+            curl -s -o /dev/null -w "HTTP Status: %{http_code}" http://localhost:80/api || echo "API 未就绪"

@@ -1,0 +1,223 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 243 75% 58%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 243 75% 58%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
+    --card: 224 71% 6%;
+    --card-foreground: 210 40% 98%;
+    --popover: 224 71% 6%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 243 75% 58%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 217 19% 55%;
+    --accent: 215 28% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 243 75% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.06), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 100%, hsl(258 70% 60% / 0.04), transparent);
+    min-height: 100vh;
+  }
+}
+
+/* ==========================================
+   自定义滚动条
+   ========================================== */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.45);
+}
+
+/* ==========================================
+   消息气泡动画
+   ========================================== */
+@keyframes messageIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.message-enter {
+  animation: messageIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================
+   全局过渡动画
+   ========================================== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* ==========================================
+   输入框聚焦光效
+   ========================================== */
+input:focus,
+textarea:focus,
+[contenteditable]:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15), 0 0 0 1px hsl(var(--primary) / 0.3);
+}
+
+/* ==========================================
+   毛玻璃卡片基础样式
+   ========================================== */
+.glass-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.dark .glass-card {
+  background: rgba(15, 15, 20, 0.75);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ==========================================
+   按钮悬停动效
+   ========================================== */
+.btn-hover-lift {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+
+.btn-hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-hover-lift:active {
+  transform: translateY(0);
+}
+
+/* ==========================================
+   头像在线状态脉冲
+   ========================================== */
+@keyframes online-pulse {
+  0% {
+    box-shadow: 0 0 0 0 hsl(142 76% 47% / 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 6px hsl(142 76% 47% / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 hsl(142 76% 47% / 0);
+  }
+}
+
+.avatar-online::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background: hsl(142 76% 47%);
+  border: 2px solid hsl(var(--background));
+  border-radius: 50%;
+  animation: online-pulse 2s infinite;
+}
+
+/* ==========================================
+   页面切换动画
+   ========================================== */
+.page-enter {
+  animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ==========================================
+   选择文本颜色
+   ========================================== */
+::selection {
+  background: hsl(var(--primary) / 0.2);
+  color: hsl(var(--foreground));
+}

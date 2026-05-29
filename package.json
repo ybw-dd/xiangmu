@@ -1,0 +1,51 @@
+{
+  "name": "lingxun",
+  "version": "0.1.0",
+  "private": true,
+  "description": "灵讯 - 工业级实时即时通讯系统",
+  "author": "LingXun Team",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev:server": "pnpm --filter @lingxun/server dev",
+    "dev:web": "pnpm --filter @lingxun/web dev",
+    "dev": "pnpm run dev:server & pnpm run dev:web",
+    "build:server": "pnpm --filter @lingxun/server build",
+    "build:web": "pnpm --filter @lingxun/web build",
+    "build": "pnpm run build:server && pnpm run build:web",
+    "lint": "eslint 'apps/**/src/**/*.{ts,tsx}' 'packages/**/src/**/*.ts' --fix",
+    "format": "prettier --write 'apps/**/src/**/*.{ts,tsx}' 'packages/**/src/**/*.ts'",
+    "db:generate": "pnpm --filter @lingxun/server exec prisma generate",
+    "db:migrate": "pnpm --filter @lingxun/server exec prisma migrate dev",
+    "db:push": "pnpm --filter @lingxun/server exec prisma db push",
+    "db:studio": "pnpm --filter @lingxun/server exec prisma studio",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "husky": "^9.1.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.4.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml}": [
+      "prettier --write"
+    ]
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
