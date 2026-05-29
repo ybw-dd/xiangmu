@@ -13,7 +13,7 @@ jobs:
       - name: Checkout 代码
         uses: actions/checkout@v4
 
-      - name: SSH 部署到生产服务器
+      - name: 初始化服务器目录（首次 clone）
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -21,16 +21,58 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /opt/lingxun || git clone git@github.com:${{ github.repository }}.git /opt/lingxun && cd /opt/lingxun
+            if [ ! -d /opt/lingxun ]; then
+              echo "创建 /opt/lingxun 并 clone 代码..."
+              git clone git@github.com:${{ github.repository }}.git /opt/lingxun
+            else
+              echo "/opt/lingxun 已存在，跳过 clone"
+            fi
+
+      - name: 拉取最新代码
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/lingxun
             git fetch origin main
             git reset --hard origin/main
-            docker compose down
-            docker compose up -d --build
+
+      - name: 创建 .env（首次部署）
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/lingxun
+            if [ ! -f .env ]; then
+              echo "从 .env.production 创建 .env ..."
+              cp .env.production .env
+              echo "已创建 .env"
+            else
+              echo ".env 已存在，跳过"
+            fi
+
+      - name: Docker Compose 构建 & 启动
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/lingxun
+            docker compose --env-file .env.production down
+            docker compose --env-file .env.production up -d --build
 
       - name: 等待服务启动
         run: sleep 30
 
-      - name: 健康检查
+      - name: 健康检查（端口 8080）
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -39,9 +81,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "=== Docker 容器状态 ==="
-            docker compose -f /opt/lingxun/docker-compose.yml ps
+            cd /opt/lingxun && docker compose ps
             echo ""
-            echo "=== 健康检查 ==="
-            curl -s -o /dev/null -w "HTTP Status: %{http_code}" http://localhost:80/ || echo "Nginx 未就绪"
+            echo "=== 健康检查（端口 8080）==="
+            curl -s -o /dev/null -w "首页 HTTP: %{http_code}" http://localhost:8080/ || echo " - 未就绪"
             echo ""
-            curl -s -o /dev/null -w "HTTP Status: %{http_code}" http://localhost:80/api || echo "API 未就绪"
+            curl -s -o /dev/null -w "API  HTTP: %{http_code}" http://localhost:8080/api || echo " - 未就绪"
