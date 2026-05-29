@@ -98,7 +98,7 @@ export default function LoginPage() {
               transition={{ delay: 0.3 }}
             >
               <label htmlFor="username" className="block text-sm font-medium text-foreground/80 mb-1.5">
-                用户名 / 邮箱
+                用户名 // 邮箱
               </label>
               <div className="relative">
                 <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
