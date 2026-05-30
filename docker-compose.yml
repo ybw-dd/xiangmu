@@ -3,7 +3,7 @@ services:
   # MySQL 数据库
   # ==========================================
   mysql:
-    image: mysql:8.0
+    image: docker.m.daocloud.io/library/mysql:8.0
     container_name: lingxun-mysql
     restart: unless-stopped
     ports:
@@ -154,7 +154,7 @@ services:
   # 如需启用 HTTPS：将 nginx-http.conf 换回 nginx.conf，恢复 443 端口和 ssl volume
   # ==========================================
   nginx:
-    image: nginx:1.25-alpine
+    image: docker.m.daocloud.io/library/nginx:1.25-alpine
     container_name: lingxun-nginx
     restart: unless-stopped
     ports:

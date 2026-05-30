@@ -21,11 +21,12 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            if [ ! -d /opt/lingxun ]; then
-              echo "创建 /opt/lingxun 并 clone 代码..."
+            if [ ! -d /opt/lingxun/.git ]; then
+              echo "目录不存在或不是 git 仓库，执行 clone..."
+              rm -rf /opt/lingxun
               git clone git@github.com:${{ github.repository }}.git /opt/lingxun
             else
-              echo "/opt/lingxun 已存在，跳过 clone"
+              echo "/opt/lingxun 已是 git 仓库，跳过 clone"
             fi
 
       - name: 拉取最新代码
@@ -39,6 +40,27 @@ jobs:
             cd /opt/lingxun
             git fetch origin main
             git reset --hard origin/main
+
+      - name: 配置 Docker 镜像加速
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo mkdir -p /etc/docker
+            sudo tee /etc/docker/daemon.json <<'EOF'
+            {
+              "registry-mirrors": [
+                "https://registry.cn-hangzhou.aliyuncs.com",
+                "https://docker.m.daocloud.io"
+              ]
+            }
+            EOF
+            sudo systemctl daemon-reload
+            sudo systemctl restart docker
+            echo "Docker 镜像加速已配置并重启"
 
       - name: 创建 .env（首次部署）
         uses: appleboy/ssh-action@v1

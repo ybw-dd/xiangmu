@@ -3,7 +3,7 @@
 # ==========================================
 
 # 阶段 1: 依赖安装
-FROM node:22-alpine AS deps
+FROM docker.m.daocloud.io/library/node:22-alpine AS deps
 RUN corepack enable pnpm
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY packages/ui/package.json ./packages/ui/
 RUN pnpm install --frozen-lockfile --prod=false
 
 # 阶段 2: 构建
-FROM node:22-alpine AS builder
+FROM docker.m.daocloud.io/library/node:22-alpine AS builder
 RUN corepack enable pnpm
 WORKDIR /app
 
@@ -30,7 +30,7 @@ ENV DOCKER_BUILD=true
 RUN pnpm --filter @lingxun/web build
 
 # 阶段 3: 生产运行
-FROM node:22-alpine AS runner
+FROM docker.m.daocloud.io/library/node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
